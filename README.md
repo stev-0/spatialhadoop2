@@ -76,9 +76,13 @@ To compile SpatialHadoop, navigate to the source code and run the command:
 
 This will automatically retrieve all dependencies and compile the source code.
 
-To build a redistribution package, run the command:
+To build a redistribution package that compiles to Hadoop 1.x, run the command:
 
     ant package1
+
+To do the same for a package that compiles to Hadoop 2.x, run the command:
+
+    ant package2
 
 This Ant task will package all classes of SpatialHadoop along with the dependent jars
 not included in Hadoop into an archive. This archive can be used to install SpatialHadoop
