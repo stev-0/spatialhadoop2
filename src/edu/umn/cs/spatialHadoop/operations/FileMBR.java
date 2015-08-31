@@ -211,7 +211,7 @@ public class FileMBR {
     Path outputPath;
     FileSystem outFs = FileSystem.get(job);
     do {
-      outputPath = new Path(inFiles[0].getName()+".mbr_"+(int)(Math.random()*1000000));
+      outputPath = new Path("/user/Stephen.Knox/"+inFiles[0].getName()+".mbr_"+(int)(Math.random()*1000000));
     } while (outFs.exists(outputPath));
     
     job.setJobName("FileMBR");

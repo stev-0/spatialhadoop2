@@ -1,9 +1,9 @@
-REGISTER /home/cloudera/osmpbf/osmpbfinputformat/lib/osmpbf-1.3.3.jar;
-REGISTER /home/cloudera/osmpbf/importMR/osmpbfinputformat.jar;
-REGISTER /mnt/hgfs/Share/pigeon/target/pigeon-1.0-SNAPSHOT.jar;
-REGISTER /mnt/hgfs/Share/lib/esri-geometry-api-1.1.1.jar;
+REGISTER osmpbf-1.3.3.jar;
+REGISTER osmpbfinputformat.jar;
+REGISTER pigeon-1.0-SNAPSHOT.jar;
+REGISTER esri-geometry-api-1.1.1.jar;
 
-IMPORT '/mnt/hgfs/Share/pigeon_import.pig';
+IMPORT 'pigeon_import.pig';
 
 pbf_nodes = LOAD '/mnt/hgfs/Share/leeds.osm.pbf' USING io.github.gballet.pig.OSMPbfPigLoader('1') AS (id:long, lat:double, lon:double, nodeTags:map[]);
 
