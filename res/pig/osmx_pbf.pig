@@ -1,13 +1,13 @@
 REGISTER osmpbf-1.3.3.jar;
 REGISTER osmpbfinputformat.jar;
-REGISTER pigeon-1.0-SNAPSHOT.jar;
+REGISTER pigeon-0.2.1.jar;
 REGISTER esri-geometry-api-1.1.1.jar;
 
 IMPORT 'pigeon_import.pig';
 
-pbf_nodes = LOAD '/mnt/hgfs/Share/leeds.osm.pbf' USING io.github.gballet.pig.OSMPbfPigLoader('1') AS (id:long, lat:double, lon:double, nodeTags:map[]);
+pbf_nodes = LOAD '$inputFile' USING io.github.gballet.pig.OSMPbfPigLoader('1') AS (id:long, lat:double, lon:double, nodeTags:map[]);
 
-pbf_ways = LOAD '/mnt/hgfs/Share/leeds.osm.pbf' USING io.github.gballet.pig.OSMPbfPigLoader('2') AS (id:long, nodes:bag{(pos:int, nodeid:long)}, tags:map[]);
+pbf_ways = LOAD '$inputFile' USING io.github.gballet.pig.OSMPbfPigLoader('2') AS (id:long, nodes:bag{(pos:int, nodeid:long)}, tags:map[]);
 
 pbf_ways = FOREACH pbf_ways
   GENERATE id AS way_id, FLATTEN(nodes), tags AS way_tags;
@@ -21,7 +21,7 @@ interesting_nodes = FILTER pbf_nodes BY NOT IsEmpty(nodeTags) AND NOT (SIZE(node
 interesting_nodes_geo = FOREACH interesting_nodes
   GENERATE id AS node_id, ST_MakePoint(lon, lat) AS location, nodeTags as tags;
 
-STORE interesting_nodes_geo into 'output/nodes' USING PigStorage(',');
+STORE interesting_nodes_geo into '$outputNodes' USING PigStorage('\t');
 
 /* Join ways with nodes to find the location of each node (lat, lon)*/
 joined_ways = JOIN node_locations BY node_id, pbf_ways BY nodes::nodeid PARALLEL 70;
@@ -45,8 +45,4 @@ ways_with_shapes = FOREACH ways_with_nodes {
 };
 
 ways_with_wkt_shapes = FOREACH ways_with_shapes GENERATE way_id, ST_AsText(geom), way_tags AS tags;
-
-describe pbf_nodes;
-describe pbf_ways;
-
-
+STORE ways_with_wkt_shapes into '$outputWays' USING PigStorage('\t');
