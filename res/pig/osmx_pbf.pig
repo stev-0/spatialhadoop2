@@ -14,7 +14,7 @@ pbf_ways = FOREACH pbf_ways
   GENERATE id AS way_id, FLATTEN(nodes), tags AS way_tags;
 
 node_locations = FOREACH pbf_nodes
-  GENERATE id AS node_id, ST_MakePoint(lon, lat) AS location;
+  GENERATE id AS node_id, ST_AsText(ST_MakePoint(lon, lat)) AS location;
 
 /* store nodes with interesting tags into a file */
 interesting_nodes = FILTER pbf_nodes BY NOT IsEmpty(nodeTags) AND NOT (SIZE(nodeTags)==1 AND nodeTags#'created_by' is not null);
