@@ -47,11 +47,10 @@ public class HasTag extends EvalFunc<Boolean> {
   public static boolean hasTag(Map<String, String> tags, String keys, String values) {
     for (Map.Entry<String, String> entry : tags.entrySet())
       // avoid null pointer exception if tag has no value e.g. shop=''
-      if entry.getValue() == null) {
-        return false;
+      if (entry.getValue() == null) {
+        if (keys.contains(entry.getKey()) && values.contains(entry.getValue()))
+          return true;
       }
-      if (keys.contains(entry.getKey()) && values.contains(entry.getValue()))
-        return true;
     return false;
   }
 }
