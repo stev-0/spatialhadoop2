@@ -8,15 +8,15 @@
 *************************************************************************/
 
 REGISTER osmpbf-1.3.3.jar;
-REGISTER pigeon-1.0-SNAPSHOT.jar;
+REGISTER pigeon-0.2.1.jar;
 REGISTER esri-geometry-api-1.1.1.jar;
 REGISTER piggybank.jar;
-REGISTER spatialhadoop-2.3.jar;
+REGISTER spatialhadoop-2.4-rc1.jar;
 
 IMPORT 'pigeon_import.pig';
 
 /* Read and parse nodes */
-xml_nodes = LOAD '$input'
+xml_nodes = LOAD '$inputFile'
   USING org.apache.pig.piggybank.storage.XMLLoader('node')
   AS (node:chararray);
 
@@ -34,13 +34,13 @@ interesting_nodes = FILTER flattened_nodes BY NOT IsEmpty(nodeTags) AND NOT (SIZ
 interesting_nodes_shadoop = FOREACH interesting_nodes
   GENERATE nodeid, lon, lat, nodeTags;
 
-node_locations = FOREACH flattened_nodes
-  GENERATE nodeid, ST_MakePoint(lon, lat) AS location;
+node_locations = FOREACH interesting_nodes
+  GENERATE nodeid, ST_AsText(ST_MakePoint(lon, lat)) AS location;
 
-STORE interesting_nodes_shadoop into '$nodeOutput' USING PigStorage('\t');
+STORE interesting_nodes_shadoop into '$outputNodes' USING PigStorage('\t');
 
 /* Read and parse ways */
-xml_ways = LOAD '$input' USING org.apache.pig.piggybank.storage.XMLLoader('way') AS (way:chararray);
+xml_ways = LOAD '$inputFile' USING org.apache.pig.piggybank.storage.XMLLoader('way') AS (way:chararray);
 
 parsed_ways = FOREACH xml_ways GENERATE edu.umn.cs.spatialHadoop.osm.OSMWay(way) AS way;
 
@@ -71,4 +71,4 @@ ways_with_shapes = FOREACH ways_with_nodes {
 
 ways_with_wkt_shapes = FOREACH ways_with_shapes GENERATE way_id, ST_AsText(geom), way_tags AS tags;
 
-STORE ways_with_wkt_shapes into '$wayOutput' USING PigStorage('\t');
+STORE ways_with_wkt_shapes into '$outputWays' USING PigStorage('\t');

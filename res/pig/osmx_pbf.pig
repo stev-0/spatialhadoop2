@@ -13,19 +13,23 @@ pbf_ways = LOAD '$inputFile' USING io.github.gballet.pig.OSMPbfPigLoader('2') AS
 pbf_ways = FOREACH pbf_ways
   GENERATE id AS way_id, FLATTEN(nodes), tags AS way_tags;
 
+/* filter ways which do not have tags */
+filtered_ways = FILTER pbf_ways BY NOT IsEmpty(way_tags);
+
 node_locations = FOREACH pbf_nodes
-  GENERATE id AS node_id, ST_AsText(ST_MakePoint(lon, lat)) AS location;
+  GENERATE id AS node_id, ST_MakePoint(lon, lat) AS location;
 
 /* store nodes with interesting tags into a file */
 interesting_nodes = FILTER pbf_nodes BY NOT IsEmpty(nodeTags) AND NOT (SIZE(nodeTags)==1 AND nodeTags#'created_by' is not null);
 
-interesting_nodes_geo = FOREACH interesting_nodes
-  GENERATE id AS node_id, ST_MakePoint(lon, lat) AS location, nodeTags as tags;
+interesting_nodes_geo = FOREACH interesting_nodes GENERATE id AS node_id, ST_AsText(ST_MakePoint(lon, lat)) AS location, nodeTags as tags;
 
-STORE interesting_nodes_geo into '$outputNodes' USING PigStorage('\t');
+interesting_nodes_shadoop = FOREACH interesting_nodes GENERATE id as node_id, lon, lat, nodeTags as tags;
+
+STORE interesting_nodes_shadoop into '$outputNodes' USING PigStorage('\t');
 
 /* Join ways with nodes to find the location of each node (lat, lon)*/
-joined_ways = JOIN node_locations BY node_id, pbf_ways BY nodes::nodeid PARALLEL 70;
+joined_ways = JOIN node_locations BY node_id, filtered_ways BY nodes::nodeid PARALLEL 70;
 
 /* Group all node locations of each way by way ID*/
 ways_with_nodes = GROUP joined_ways BY way_id PARALLEL 70;
@@ -33,7 +37,7 @@ ways_with_nodes = GROUP joined_ways BY way_id PARALLEL 70;
 /* For each way, generate a shape out of every list of points. Keep first and last node IDs to be able to connect ways later*/
 ways_with_shapes = FOREACH ways_with_nodes {
   /* order points by position */
-  ordered_asc = ORDER joined_ways BY pos ASC;
+    ordered_asc = ORDER joined_ways BY pos ASC;
   first_node = LIMIT ordered_asc 1;
   ordered_desc = ORDER joined_ways BY pos DESC;
   last_node = LIMIT ordered_desc 1;
@@ -47,3 +51,4 @@ ways_with_shapes = FOREACH ways_with_nodes {
 
 ways_with_wkt_shapes = FOREACH ways_with_shapes GENERATE way_id, ST_AsText(geom), way_tags AS tags;
 STORE ways_with_wkt_shapes into '$outputWays' USING PigStorage('\t');
+  

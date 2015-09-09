@@ -1,5 +1,5 @@
 REGISTER spatialhadoop-2.4-rc1.jar;
-nodes = LOAD '$nodeInput' USING PigStorage as (id:long, geom:chararray, nodeTags:map[chararray]);
+nodes = LOAD '$nodeInput' USING PigStorage as (id:long, lon:long, lat:long, nodeTags:map[chararray]);
 ways = LOAD '$wayInput' USING PigStorage as (id:long, geom:chararray, wayTags:map[chararray]);
 cleannodes = FILTER nodes BY nodeTags is not null;
 cleanways = FILTER ways BY wayTags is not null;
