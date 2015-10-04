@@ -9,7 +9,7 @@ IMPORT 'pigeon_import.pig';
 pbf_nodes = LOAD '$inputFile' USING io.github.gballet.pig.OSMPbfPigLoader('1') AS (id:long, lat:double, lon:double, nodeTags:map[]);
 
 pbf_ways = LOAD '$inputFile' USING io.github.gballet.pig.OSMPbfPigLoader('2') AS (id:long, nodes:bag{(pos:int, nodeid:long)}, tags:map[]);
-
+pbf_ways = FILTER pbf_ways BY SIZE(nodes) > 1;
 pbf_ways = FOREACH pbf_ways
   GENERATE id AS way_id, FLATTEN(nodes), tags AS way_tags;
 
